@@ -2,7 +2,7 @@
   "name": "fivesim_ts",
   "version": "1.0.0",
   "description": "Simple wrapper around 5Sim API with TypeScript support",
-  "main": "./5sim/main.js",
+  "main": "./dist/main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

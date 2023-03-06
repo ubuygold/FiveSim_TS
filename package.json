@@ -1,29 +1,23 @@
 {
-  "name": "fivesim",
-  "version": "1.0.6",
-  "description": "Simple wrapper around 5Sim API",
+  "name": "fivesim_ts",
+  "version": "1.0.0",
+  "description": "Simple wrapper around 5Sim API with TypeScript support",
   "main": "./5sim/main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "type": "module",
   "keywords": [],
-  "author": "Nicholas Lopez",
+  "author": "Karolus Xiao",
   "license": "ISC",
   "devDependencies": {
     "axios": "^0.21.1",
-    "delay": "^5.0.0"
+    "delay": "^5.0.0",
+    "@types/node": "^18.14.6"
   },
   "dependencies": {
-    "axios": "latest",
+    "axios": "^1.3.4",
     "date": "^1.0.2",
     "delay": "^5.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/nickpick42/FiveSim.git"
-  },
-  "bugs": {
-    "url": "https://github.com/nickpick42/FiveSim/issues"
-  },
-  "homepage": "https://github.com/nickpick42/FiveSim#readme"
+  }
 }

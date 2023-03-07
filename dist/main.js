@@ -20,7 +20,12 @@ export class FiveSim {
                 }
             };
             let response = yield axios(config);
-            return response.data;
+            if (response.status === 200) {
+                return response.data;
+            }
+            else {
+                throw new Error("Error getting balance");
+            }
         });
         this.getAuthorizationNumber = (country, operator, name) => __awaiter(this, void 0, void 0, function* () {
             let config = {
@@ -32,11 +37,16 @@ export class FiveSim {
             };
             let response = yield axios(config);
             this.id = response.data.id;
-            return response.data;
+            if (response.status === 200) {
+                return response.data;
+            }
+            else {
+                throw new Error("Error getting number");
+            }
         });
         this.waitForCode = (manualId, interval, stopCheckAfter) => __awaiter(this, void 0, void 0, function* () {
             if (!this.isIdSet(manualId)) {
-                return;
+                throw new Error("Must request number first");
             }
             if (interval !== undefined) {
                 this.interval = interval;
@@ -55,7 +65,11 @@ export class FiveSim {
                 }
                 yield Delay(this.interval);
                 try {
-                    let phoneCheck = yield this.checkOrder(manualId);
+                    let phoneCheck = yield this.checkOrder();
+                    // assert phoneCheck is not undefined
+                    if (phoneCheck === undefined) {
+                        continue;
+                    }
                     code = phoneCheck.sms[0].code;
                     new Promise(() => __awaiter(this, void 0, void 0, function* () {
                         yield this.finishOrder(this.id);
@@ -65,11 +79,14 @@ export class FiveSim {
                 catch (e) {
                 }
             }
+            if (code === undefined) {
+                throw new Error("No code found");
+            }
             return code;
         });
         this.checkOrder = (manualId) => __awaiter(this, void 0, void 0, function* () {
             if (!this.isIdSet(manualId)) {
-                return;
+                throw new Error("Must request number first");
             }
             let config = {
                 method: 'get',
@@ -85,7 +102,7 @@ export class FiveSim {
             this.stopChecking();
             if (!this.isIdSet(manualId)) {
                 console.log("Must request number first");
-                return;
+                throw new Error("Must request number first");
             }
             let config = {
                 method: 'get',
@@ -100,7 +117,7 @@ export class FiveSim {
         this.cancelOrder = (manualId) => __awaiter(this, void 0, void 0, function* () {
             if (!this.isIdSet(manualId)) {
                 console.log("Must request number first");
-                return;
+                throw new Error("Must request number first");
             }
             this.stopChecking();
             let config = {
@@ -116,7 +133,7 @@ export class FiveSim {
         this.banNumber = (manualId) => __awaiter(this, void 0, void 0, function* () {
             if (!this.isIdSet(manualId)) {
                 console.log("Must request number first");
-                return;
+                throw new Error("Must request number first");
             }
             this.stopChecking();
             let config = {

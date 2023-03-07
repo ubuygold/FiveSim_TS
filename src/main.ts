@@ -1,5 +1,8 @@
+import { IPhoneResponse } from './types/getPhoneTypes.js';
+import { IProfile } from './types/balanceType.js';
 import axios from "axios"
 import Delay from "delay"
+import { IOrderResponse } from './types/orderResponse.js';
 
 export class FiveSim {
     apiKey: string;
@@ -7,6 +10,7 @@ export class FiveSim {
     interval: number;
     stopCheckAfter: number;
     id: number | undefined;
+    manualId: number | undefined;
 
     constructor(apiKey: string) {
         this.apiKey = apiKey
@@ -15,7 +19,7 @@ export class FiveSim {
         this.stopCheckAfter = 100000
     }
 
-    getBalance = async () => {
+    getBalance = async (): Promise<IProfile> => {
 
         const config = {
             method: "get",
@@ -25,10 +29,12 @@ export class FiveSim {
             }
         }
         let response = await axios(config)
-        return response.data
+        if (response.status === 200) {
+            return response.data
+        } else { throw new Error("Error getting balance") }
     }
 
-    getAuthorizationNumber = async (country: string, operator: string, name: string) => {
+    getAuthorizationNumber = async (country: string, operator: string, name: string): Promise<IPhoneResponse> => {
         let config = {
             method: 'get',
             url: 'https://5sim.net/v1/user/buy/activation/' + country + '/' + operator + '/' + name,
@@ -38,11 +44,14 @@ export class FiveSim {
         }
         let response = await axios(config)
         this.id = response.data.id
-        return response.data
+        if (response.status === 200) {
+            return response.data
+        } else { throw new Error("Error getting number") }
     }
-    waitForCode = async (manualId: number | undefined, interval: number | undefined, stopCheckAfter: number | undefined) => {
+
+    waitForCode = async (manualId?: number, interval?: number, stopCheckAfter?: number): Promise<string> => {
         if (!this.isIdSet(manualId)) {
-            return
+            throw new Error("Must request number first")
         }
         if (interval !== undefined) {
             this.interval = interval
@@ -65,7 +74,9 @@ export class FiveSim {
             }
             await Delay(this.interval)
             try {
-                let phoneCheck = await this.checkOrder(manualId)
+                let phoneCheck = await this.checkOrder()
+                // assert phoneCheck is not undefined
+                if (phoneCheck === undefined) { continue }
                 code = phoneCheck.sms[0].code;
                 new Promise(async () => {
                     await this.finishOrder(this.id)
@@ -76,14 +87,16 @@ export class FiveSim {
             }
         }
 
-
+        if (code === undefined) {
+            throw new Error("No code found")
+        }
         return code
 
     }
 
-    checkOrder = async (manualId: number | undefined) => {
+    checkOrder = async (manualId?: number): Promise<IOrderResponse> => {
         if (!this.isIdSet(manualId)) {
-            return
+            throw new Error("Must request number first")
         }
 
         let config = {
@@ -98,11 +111,11 @@ export class FiveSim {
         return response.data
 
     }
-    finishOrder = async (manualId: number | undefined) => {
+    finishOrder = async (manualId?: number): Promise<IOrderResponse> => {
         this.stopChecking()
         if (!this.isIdSet(manualId)) {
             console.log("Must request number first")
-            return
+            throw new Error("Must request number first")
         }
 
         let config = {
@@ -117,10 +130,10 @@ export class FiveSim {
 
     }
 
-    cancelOrder = async (manualId: number | undefined) => {
+    cancelOrder = async (manualId?: number): Promise<IOrderResponse> => {
         if (!this.isIdSet(manualId)) {
             console.log("Must request number first")
-            return
+            throw new Error("Must request number first")
         }
         this.stopChecking()
         let config = {
@@ -135,10 +148,10 @@ export class FiveSim {
         return response.data
 
     }
-    banNumber = async (manualId: number | undefined) => {
+    banNumber = async (manualId?: number): Promise<IOrderResponse> => {
         if (!this.isIdSet(manualId)) {
             console.log("Must request number first")
-            return
+            throw new Error("Must request number first")
         }
         this.stopChecking()
         let config = {
@@ -153,7 +166,7 @@ export class FiveSim {
         let response = await axios(config)
         return response.data
     }
-    isIdSet = (manualId: number | undefined) => {
+    isIdSet = (manualId: number | undefined): boolean => {
         if (this.id === undefined && manualId === undefined) {
             return false
         }

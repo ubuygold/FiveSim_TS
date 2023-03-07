@@ -1,14 +1,14 @@
 # 5SIM
 
-This is an unofficial wrapper around the 5SIM API calls. 
-
+This is an unofficial wrapper around the 5SIM API calls with TypeScript support.
+Forked from [nickpick42/FiveSim](https://github.com/nickpick42/FiveSim).
 
 ## Installation
-https://www.npmjs.com/package/fivesim
+https://www.npmjs.com/package/fivesim_ts
 Use the package manager [npm](https://www.npmjs.com/) to install 5sim.
 
 ```bash
-npm install fivesim
+npm install fivesim_ts
 ```
 ##Recommended Usage
 
@@ -59,6 +59,8 @@ main()
 
 ## Contributing
 Huge thank you to the creators of 5sim. The API endpoints are extremely easy to use and thought I would do my part and upload a basic wrapper around the endpoints. Please contact me for any requested changes or updates. 
+Forked from [nickpick42/FiveSim](https://github.com/nickpick42/FiveSim).
+Added TS Support for testing. Make an issue if not work.
 
 
 ## License

@@ -3,7 +3,6 @@ import { IProfile } from './types/balanceType.js';
 import axios from "axios";
 import Delay from "delay";
 import { IOrderResponse } from './types/orderResponse.js';
-import _ from 'lodash';
 import { IState } from './types/IState.js';
 
 export const FiveSim = (apiKey: string) => {

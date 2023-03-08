@@ -1,6 +1,6 @@
 {
   "name": "fivesim_ts",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Simple wrapper around 5Sim API with TypeScript support",
   "main": "./dist/main.js",
   "scripts": {

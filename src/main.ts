@@ -93,9 +93,6 @@ export const FiveSim = (apiKey: string) => {
     };
 
     const waitForCode = async (interval = 500, stopCheckAfter = 100000): Promise<string> => {
-        const id = getId(state);
-        state = stopChecking(state);
-        let stopCheck: boolean = false;
         new Promise(async () => {
             await Delay(stopCheckAfter);
             state = stopChecking(state);
@@ -114,7 +111,6 @@ export const FiveSim = (apiKey: string) => {
                 if (phoneCheck === undefined) { continue; }
                 code = phoneCheck.sms[0].code;
                 await finishOrder();
-                return code;
             } catch (e) {
 
             }

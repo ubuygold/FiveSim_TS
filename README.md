@@ -13,12 +13,12 @@ npm install fivesim_ts
 ##Recommended Usage
 
 ```javascript
-const FiveSim = require("../main");
+const FiveSim = require("fivesim_ts");
 
 let main = async ()=> {
 
     let apiKey = "API_KEY_HERE"
-    let SimTesting = new FiveSim(apiKey)
+    let SimTesting = FiveSim(apiKey)
     let numberRequest = await SimTesting.getAuthorizationNumber('any','any','google')
     let phoneNumber = numberRequest.phone //Generated phone number
     //await page.type("input[name='phone_number']",phoneNumber)
@@ -44,13 +44,13 @@ const FiveSim = require("../main");
 
 let main = async ()=> {
     let apiKey = "PUT_API_KEY_HERE"
-    let SimTesting = new FiveSim(apiKey)
+    let SimTesting = FiveSim(apiKey)
     let numberRequest = await SimTesting.getAuthorizationNumber('any','any','google')
     let phoneNumber = numberRequest.phone //Generated phone number
     let id = numberRequest.id //Id to check order
-    let check = await SimTesting.checkOrder(id)
+    let check = await SimTesting.checkOrder()
     let code = check.sms[0].code//Recieved Code
-    let finish = await SimTesting.finishOrder(id)// Finish order if successful
+    let finish = await SimTesting.finishOrder()// Finish order if successful
     console.log(finish)
 
 }
@@ -60,7 +60,7 @@ main()
 ## Contributing
 Huge thank you to the creators of 5sim. The API endpoints are extremely easy to use and thought I would do my part and upload a basic wrapper around the endpoints. Please contact me for any requested changes or updates. 
 Forked from [nickpick42/FiveSim](https://github.com/nickpick42/FiveSim).
-Added TS Support for testing. Make an issue if not work.
+Added TS Support for testing(by me). Make an issue if not work.
 
 
 ## License

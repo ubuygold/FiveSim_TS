@@ -92,9 +92,6 @@ export const FiveSim = (apiKey) => {
         }
     });
     const waitForCode = (interval = 500, stopCheckAfter = 100000) => __awaiter(void 0, void 0, void 0, function* () {
-        const id = getId(state);
-        state = stopChecking(state);
-        let stopCheck = false;
         new Promise(() => __awaiter(void 0, void 0, void 0, function* () {
             yield Delay(stopCheckAfter);
             state = stopChecking(state);
@@ -113,7 +110,6 @@ export const FiveSim = (apiKey) => {
                 }
                 code = phoneCheck.sms[0].code;
                 yield finishOrder();
-                return code;
             }
             catch (e) {
             }

@@ -26,5 +26,13 @@
     "axios": "^1.3.4",
     "date": "^1.0.2",
     "delay": "^5.0.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ubuygold/FiveSim_TS.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ubuygold/FiveSim_TS/issues"
+  },
+  "homepage": "https://github.com/ubuygold/FiveSim_TS#readme"
 }

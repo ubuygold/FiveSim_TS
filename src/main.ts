@@ -1,182 +1,141 @@
-import { IPhoneResponse } from './types/getPhoneTypes.js';
+import { IResponse } from './types/getPhoneTypes.js';
 import { IProfile } from './types/balanceType.js';
-import axios from "axios"
-import Delay from "delay"
+import axios from "axios";
+import Delay from "delay";
 import { IOrderResponse } from './types/orderResponse.js';
+import _ from 'lodash';
+import { IState } from './types/IState.js';
 
-export class FiveSim {
-    apiKey: string;
-    stopCheck: boolean;
-    interval: number;
-    stopCheckAfter: number;
-    id: number | undefined;
-    manualId: number | undefined;
+export const FiveSim = (apiKey: string) => {
 
-    constructor(apiKey: string) {
-        this.apiKey = apiKey
-        this.stopCheck = false
-        this.interval = 500
-        this.stopCheckAfter = 100000
-    }
+    let state: IState = { id: undefined, stopCheck: false };
 
-    getBalance = async (): Promise<IProfile> => {
+    const getId = (state: IState): number | undefined => {
+        if (state.id !== undefined) {
+            return state.id;
+        } else {
+            throw new Error("Id is undefined");
+        };
+    };
 
-        const config = {
-            method: "get",
-            url: "https://5sim.net/v1/user/profile",
-            headers: {
-                'Authorization': 'Bearer ' + this.apiKey
-            }
+    const updateId = (state: IState, id: number): IState => { return { ...state, id: id }; };
+
+    const stopChecking = (state: IState): IState => { return { ...state, stopCheck: true }; };
+
+    const getStopCheck = (state: IState): boolean => { return state.stopCheck; };
+
+    const axiosConfig = {
+        baseURL: "https://5sim.net/v1/user/",
+        headers: {
+            "Authorization": "Bearer " + apiKey
         }
-        let response = await axios(config)
+    };
+
+    const getBalance = async (): Promise<IProfile> => {
+        let response = await axios.get("profile", axiosConfig);
         if (response.status === 200) {
-            return response.data
-        } else { throw new Error("Error getting balance") }
-    }
+            return response.data;
+        } else { throw new Error("Error getting balance"); }
+    };
 
-    getAuthorizationNumber = async (country: string, operator: string, name: string): Promise<IPhoneResponse> => {
-        let config = {
-            method: 'get',
-            url: 'https://5sim.net/v1/user/buy/activation/' + country + '/' + operator + '/' + name,
-            headers: {
-                'Authorization': 'Bearer ' + this.apiKey
-            }
-        }
-        let response = await axios(config)
-        this.id = response.data.id
+    const getAuthorizationNumber = async (country: string, operator: string, name: string): Promise<IResponse> => {
+        let response = await axios.get("buy/activation/" + country + "/" + operator + "/" + name, axiosConfig);
         if (response.status === 200) {
-            return response.data
-        } else { throw new Error("Error getting number") }
-    }
+            state = updateId(state, response.data.id);
+            return response.data;
+        } else { throw new Error("Error getting number"); }
+    };
 
-    waitForCode = async (manualId?: number, interval?: number, stopCheckAfter?: number): Promise<string> => {
-        if (!this.isIdSet(manualId)) {
-            throw new Error("Must request number first")
+    const checkOrder = async (): Promise<IOrderResponse> => {
+        const id = getId(state);
+        let response = await axios.get("check/" + id, axiosConfig);
+        if (response.status === 200) {
+            return response.data;
+        } else {
+            throw new Error("Error checking order");
         }
-        if (interval !== undefined) {
-            this.interval = interval
+    };
+
+    const finishOrder = async (): Promise<IOrderResponse> => {
+        const id = getId(state);
+        state = stopChecking(state);
+        let response = await axios.get("finish/" + id, axiosConfig);
+        if (response.status === 200) {
+            return response.data;
+        } else {
+            throw new Error("Error finishing order");
         }
 
-        if (stopCheckAfter !== undefined) {
-            this.stopCheckAfter = stopCheckAfter
+    };
+
+    const banNumber = async (): Promise<IOrderResponse> => {
+        const id = getId(state);
+        state = stopChecking(state);
+        let response = await axios.get("ban/" + id, axiosConfig);
+        if (response.status === 200) {
+            return response.data;
+        } else {
+            throw new Error("Error banning number");
+        }
+    };
+
+    const cancelOrder = async (): Promise<IOrderResponse> => {
+        const id = getId(state);
+        state = stopChecking(state);
+        let response = await axios.get("cancel/" + id, axiosConfig);
+
+        if (response.status === 200) {
+            return response.data;
+        } else {
+            throw new Error("Error cancelling order");
         }
 
+    };
 
+    const waitForCode = async (interval = 500, stopCheckAfter = 100000): Promise<string> => {
+        const id = getId(state);
+        state = stopChecking(state);
+        let stopCheck: boolean = false;
         new Promise(async () => {
-            await Delay(this.stopCheckAfter)
-            this.stopCheck = true
-        })
+            await Delay(stopCheckAfter);
+            state = stopChecking(state);
+        });
 
-        let code = undefined
+        let code: string | undefined = undefined;
+
         while (true) {
-            if (this.stopCheck) {
-                break
+            if (getStopCheck(state)) {
+                break;
             }
-            await Delay(this.interval)
+            await Delay(interval);
             try {
-                let phoneCheck = await this.checkOrder()
+                let phoneCheck = await checkOrder();
                 // assert phoneCheck is not undefined
-                if (phoneCheck === undefined) { continue }
+                if (phoneCheck === undefined) { continue; }
                 code = phoneCheck.sms[0].code;
-                new Promise(async () => {
-                    await this.finishOrder(this.id)
-                })
-                break
+                await finishOrder();
+                return code;
             } catch (e) {
 
             }
         }
-
         if (code === undefined) {
-            throw new Error("No code found")
+            throw new Error("No code found");
         }
-        return code
+        return code;
 
-    }
-
-    checkOrder = async (manualId?: number): Promise<IOrderResponse> => {
-        if (!this.isIdSet(manualId)) {
-            throw new Error("Must request number first")
-        }
-
-        let config = {
-            method: 'get',
-            url: 'https://5sim.net/v1/user/check/' + this.id,
-            headers: {
-                'Authorization': 'Bearer ' + this.apiKey
-            }
-        }
-
-        let response = await axios(config)
-        return response.data
-
-    }
-    finishOrder = async (manualId?: number): Promise<IOrderResponse> => {
-        this.stopChecking()
-        if (!this.isIdSet(manualId)) {
-            console.log("Must request number first")
-            throw new Error("Must request number first")
-        }
-
-        let config = {
-            method: 'get',
-            url: 'https://5sim.net/v1/user/finish/' + this.id,
-            headers: {
-                'Authorization': 'Bearer ' + this.apiKey
-            }
-        }
-        let response = await axios(config)
-        return response.data
-
-    }
-
-    cancelOrder = async (manualId?: number): Promise<IOrderResponse> => {
-        if (!this.isIdSet(manualId)) {
-            console.log("Must request number first")
-            throw new Error("Must request number first")
-        }
-        this.stopChecking()
-        let config = {
-            method: 'get',
-            url: 'https://5sim.net/v1/user/cancel/' + this.id,
-            headers: {
-                'Authorization': 'Bearer ' + this.apiKey
-            }
-        }
-        let response = await axios(config)
-
-        return response.data
-
-    }
-    banNumber = async (manualId?: number): Promise<IOrderResponse> => {
-        if (!this.isIdSet(manualId)) {
-            console.log("Must request number first")
-            throw new Error("Must request number first")
-        }
-        this.stopChecking()
-        let config = {
-            method: 'get',
-            url: 'https://5sim.net/v1/user/ban/' + this.id,
-            headers: {
-                'Authorization': 'Bearer ' + this.apiKey
-            }
+    };
 
 
-        }
-        let response = await axios(config)
-        return response.data
-    }
-    isIdSet = (manualId: number | undefined): boolean => {
-        if (this.id === undefined && manualId === undefined) {
-            return false
-        }
-        if (this.id === undefined) {
-            this.id = manualId
-        }
-        return true;
-    }
-    stopChecking = () => {
-        this.stopCheck = true
-    }
+    return {
+        getBalance: getBalance,
+        getAuthorizationNumber: getAuthorizationNumber,
+        checkOrder: checkOrder,
+        finishOrder: finishOrder,
+        banNumber: banNumber,
+        cancelOrder: cancelOrder,
+        waitForCode: waitForCode
+    };
 
-}
+
+};

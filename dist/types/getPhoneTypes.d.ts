@@ -1,4 +1,4 @@
-export interface IPhoneResponse {
+export interface IResponse {
     id: number;
     phone: string;
     operator: string;
